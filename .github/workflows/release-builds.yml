@@ -49,6 +49,11 @@ jobs:
               print(f'OPENZT2_RUST_VERSION={version}', file=output)
               print(f'OPENZT2_NATIVE_DEPENDENCY_DIR={os.environ["RUNNER_TEMP"]}/openzt2-native', file=output)
               print(f'KAI_CARGO_TARGET_ROOT={os.environ["RUNNER_TEMP"]}/cargo-targets', file=output)
+              cache_target = os.path.relpath(
+                  pathlib.Path(os.environ['RUNNER_TEMP']) / 'cargo-targets/openzt2-reimplementation',
+                  pathlib.Path.cwd(),
+              ).replace('\\', '/')
+              print(f'OPENZT2_CARGO_CACHE_TARGET={cache_target}', file=output)
           PY
       - name: Install pinned Rust
         run: |
@@ -61,7 +66,8 @@ jobs:
           sudo apt-get install -y autoconf automake libtool flex bison libjson-perl cmake ninja-build pkg-config spirv-headers libvulkan-dev libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev libfontconfig1-dev patchelf dpkg-dev mingw-w64-tools
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: . -> ${{ runner.temp }}/cargo-targets/openzt2-reimplementation
+          prefix-key: v1-rust
+          workspaces: . -> ${{ env.OPENZT2_CARGO_CACHE_TARGET }}
           cache-on-failure: true
       - name: macOS native tools
         if: runner.os == 'macOS'
