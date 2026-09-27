@@ -16,6 +16,7 @@ use crate::plugins::economy::facility_economy_types::ServiceFacility;
 use crate::plugins::economy::service_types::ServiceRequest;
 use crate::plugins::information::entity_selection_types::Inspectable;
 use crate::plugins::locomotion::locomotion_types::Arrived;
+use crate::plugins::locomotion::locomotion_types::NavAgent;
 use crate::plugins::locomotion::locomotion_types::NavigateTo;
 use crate::plugins::locomotion::locomotion_types::NavigationFailed;
 use crate::plugins::locomotion::locomotion_types::NavigationRequestSequence;
@@ -25,6 +26,9 @@ use crate::plugins::maintenance::maintenance_types::LooseLitterWaste;
 use crate::plugins::simulation_time::deterministic_random_stream::DeterministicRng;
 use crate::plugins::terrain::terrain_world_sampling::sample_terrain;
 use crate::plugins::terrain::terrain_world_sampling::terrain_chunk_at;
+use crate::plugins::world_spawn::persistent_id_types::PersistentId;
+use crate::plugins::world_spawn::world_membership_types::WorldMember;
+use crate::plugins::world_spawn::zoo_entrance_anchor_synchronization::ZooEntrance;
 use super::guest_simulation_calculations::reached_action;
 use super::guest_simulation_calculations::ReachedAction;
 use super::guest_simulation_types::Guest;
@@ -490,6 +494,10 @@ fn view_is_clear(
 pub(in crate::plugins::guests) fn cancel_failed_guest_destinations(
     mut failures: MessageReader<NavigationFailed>,
     mut guests: Query<&mut GuestNavigationRequest, With<Guest>>,
+    arriving_guests: Query<(&GuestPhase, &WorldMember, &NavAgent), With<Guest>>,
+    entrances: Query<(&PersistentId, &WorldMember, &ZooEntrance)>,
+    mut navigation_request_sequence: ResMut<NavigationRequestSequence>,
+    mut navigate: MessageWriter<NavigateTo>,
     mut commands: Commands,
 ) {
     for failure in failures.read() {
@@ -501,6 +509,29 @@ pub(in crate::plugins::guests) fn cancel_failed_guest_destinations(
             commands
                 .entity(failure.entity)
                 .remove::<(GuestDestination, Viewing, GuestViewingTarget)>();
+            let Ok((phase, member, agent)) = arriving_guests.get(failure.entity) else {
+                continue;
+            };
+            if *phase != GuestPhase::Arriving {
+                continue;
+            }
+            let Some((_, _, entrance)) = entrances
+                .iter()
+                .filter(|(_, entrance_member, _)| entrance_member.root == member.root)
+                .min_by_key(|(id, _, _)| id.0)
+            else {
+                continue;
+            };
+            // Visiting guests can choose another activity after a failed route.
+            // Arriving guests must reach the gate before admission unlocks that path.
+            let request_id = navigation_request_sequence.next();
+            request.0 = Some(request_id);
+            navigate.write(NavigateTo {
+                entity: failure.entity,
+                request_id,
+                destination: entrance.inside,
+                arrival_radius_m: agent.radius_m,
+            });
         }
     }
 }

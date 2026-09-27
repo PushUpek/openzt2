@@ -10,7 +10,15 @@ use openzt2_game_data::{
 use crate::plugins::{
     economy::{facility_economy_types::ServiceFacility, service_types::ServiceRequest},
     information::entity_selection_types::Inspectable,
-    locomotion::locomotion_types::{Arrived, NavigationFailed, NavigationFailure},
+    locomotion::locomotion_types::{
+        Arrived, NavAgent, NavFlags, NavigateTo, NavigationFailed, NavigationFailure,
+        NavigationRequestSequence,
+    },
+    world_spawn::{
+        persistent_id_types::PersistentId,
+        world_membership_types::WorldMember,
+        zoo_entrance_anchor_synchronization::ZooEntrance,
+    },
 };
 
 use super::{
@@ -22,6 +30,8 @@ use super::{
 fn only_current_guest_navigation_failure_releases_destination() {
     let mut app = App::new();
     app.add_message::<NavigationFailed>()
+        .add_message::<NavigateTo>()
+        .init_resource::<NavigationRequestSequence>()
         .add_systems(Update, cancel_failed_guest_destinations);
     let destination = app.world_mut().spawn_empty().id();
     let guest = app
@@ -56,6 +66,74 @@ fn only_current_guest_navigation_failure_releases_destination() {
     assert_eq!(
         app.world().get::<GuestNavigationRequest>(guest).unwrap().0,
         None
+    );
+}
+
+#[test]
+fn failed_entrance_route_retries_without_admitting_or_accepting_stale_failures() {
+    let mut app = App::new();
+    app.add_message::<NavigationFailed>()
+        .add_message::<NavigateTo>()
+        .init_resource::<NavigationRequestSequence>()
+        .add_systems(Update, cancel_failed_guest_destinations);
+    let root = app.world_mut().spawn_empty().id();
+    let other_root = app.world_mut().spawn_empty().id();
+    let entrance_position = Vec3::new(10.0, 0.0, 20.0);
+    for (id, world_root, position) in [(1, other_root, Vec3::ZERO), (2, root, entrance_position)] {
+        app.world_mut().spawn((
+            PersistentId(id),
+            WorldMember { root: world_root },
+            ZooEntrance {
+                arrival: position,
+                inside: position,
+                exit: position,
+            },
+        ));
+    }
+    let initial_request = app
+        .world_mut()
+        .resource_mut::<NavigationRequestSequence>()
+        .next();
+    let guest = app
+        .world_mut()
+        .spawn((
+            Guest,
+            GuestPhase::Arriving,
+            GuestNavigationRequest(Some(initial_request)),
+            WorldMember { root },
+            NavAgent {
+                radius_m: 0.25,
+                max_speed_mps: 1.0,
+                acceleration_mps2: 1.0,
+                capabilities: NavFlags::GUEST,
+            },
+        ))
+        .id();
+    for _ in 0..2 {
+        app.world_mut().write_message(NavigationFailed {
+            entity: guest,
+            request_id: initial_request,
+            reason: NavigationFailure::NoStartNode,
+        });
+    }
+    app.update();
+    let requests: Vec<_> = app
+        .world_mut()
+        .resource_mut::<Messages<NavigateTo>>()
+        .drain()
+        .collect();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].entity, guest);
+    assert_eq!(requests[0].destination, entrance_position);
+    assert_eq!(requests[0].arrival_radius_m, 0.25);
+    assert_ne!(requests[0].request_id, initial_request);
+    assert_eq!(
+        app.world().get::<GuestNavigationRequest>(guest).unwrap().0,
+        Some(requests[0].request_id)
+    );
+    assert_eq!(
+        app.world().get::<GuestPhase>(guest),
+        Some(&GuestPhase::Arriving)
     );
 }
 
