@@ -29,6 +29,21 @@ pub(super) fn specialize_main_menu_ui_source_document_for_semantic_role(
                 )
             )
         });
+        // ponytail: nothing populates the expansion icon lists, and the empty
+        // full-width "Expansion Icons" band otherwise swallows Exit's clicks.
+        if let Some(layout) = source
+            .root
+            .children
+            .iter_mut()
+            .find(|child| child.name.as_deref() == Some("Main Menu Layout"))
+        {
+            layout.children.retain(|child| {
+                !matches!(
+                    child.name.as_deref(),
+                    Some("Expansion Icons" | "Small Expansion Icons")
+                )
+            });
+        }
     } else if role == UiDocumentRole::Splash {
         source.root.children.iter_mut().for_each(|child| {
             child.state.visible = matches!(

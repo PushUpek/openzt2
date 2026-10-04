@@ -71,6 +71,7 @@ impl SelectedUiSourceResolutionProfile {
                 (UiDocumentRole::PhotoAlbum, "photoalbum_layout".into()),
                 (UiDocumentRole::ModeHelp, "modehelpmainlayout".into()),
                 (UiDocumentRole::Overview, "overview_screen".into()),
+                (UiDocumentRole::Modal, "exit_zoo".into()),
             ],
             theme: None,
             available_xpacks: BTreeSet::new(),
