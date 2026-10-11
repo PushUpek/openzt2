@@ -6,7 +6,9 @@ use bevy::{
 
 use crate::plugins::world_spawn::prefab_presentation_types::PrefabShadowPolicy;
 
-use super::ModelExpanded;
+use super::{
+    authored_model_material_pass_projection::EffectPassMaterialRenderViewProjection, ModelExpanded,
+};
 
 #[derive(Component)]
 pub(super) struct ModelSceneVisibilityAndShadowPolicyProjected;
@@ -49,9 +51,20 @@ pub(super) fn project_model_scene_visibility_and_shadow_policy(
 /// or a preview camera on its own layer never sees them.
 pub(super) fn project_model_scene_visibility_and_shadow_policy_onto_late_primitives(
     mut commands: Commands,
+    // Per-view material projections (reflection, refraction) sit beneath
+    // their source mesh but own their camera-specific layers.
     primitives: Query<
-        (Entity, Option<&RenderLayers>),
-        (With<Mesh3d>, Or<(Added<Mesh3d>, Changed<ChildOf>)>),
+        (
+            Entity,
+            Option<&RenderLayers>,
+            Has<NotShadowCaster>,
+            Has<NotShadowReceiver>,
+        ),
+        (
+            With<Mesh3d>,
+            Without<EffectPassMaterialRenderViewProjection>,
+            Or<(Added<Mesh3d>, Changed<ChildOf>)>,
+        ),
     >,
     parents: Query<&ChildOf>,
     roots: Query<
@@ -59,7 +72,7 @@ pub(super) fn project_model_scene_visibility_and_shadow_policy_onto_late_primiti
         With<ModelSceneVisibilityAndShadowPolicyProjected>,
     >,
 ) {
-    for (primitive, current_layers) in &primitives {
+    for (primitive, current_layers, not_caster, not_receiver) in &primitives {
         let Some((shadow, layers)) = std::iter::once(primitive)
             .chain(parents.iter_ancestors::<ChildOf>(primitive))
             .find_map(|entity| roots.get(entity).ok())
@@ -67,9 +80,16 @@ pub(super) fn project_model_scene_visibility_and_shadow_policy_onto_late_primiti
             continue;
         };
         let layers = model_scene_render_layers(shadow, layers);
+        let mut target = commands.entity(primitive);
         // Re-inserting equal layers would invalidate projected materials.
         if current_layers != Some(&layers) {
-            apply_model_scene_policy(&mut commands, primitive, &layers, shadow);
+            target.insert(layers);
+        }
+        if !shadow.casts && !not_caster {
+            target.insert(NotShadowCaster);
+        }
+        if !shadow.receives && !not_receiver {
+            target.insert(NotShadowReceiver);
         }
     }
 }
