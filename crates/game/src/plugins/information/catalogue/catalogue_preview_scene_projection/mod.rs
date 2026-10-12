@@ -291,7 +291,7 @@ pub(crate) fn attach_loaded_species_animation_to_catalogue_preview_renderables(
     for (renderable, model) in &renderables {
         let mut renderable_commands = commands.entity(renderable);
         renderable_commands.insert(CataloguePreviewAnimationAttachmentConsidered);
-        let Some(variant) = species.find_variant_by_model(model.model) else {
+        let Some(variant) = species.find_variant_by_model_path(&model.model_path) else {
             continue;
         };
         let Some(animation_set) = species.load_variant_animation_set(&asset_server, variant) else {
@@ -326,7 +326,8 @@ pub(crate) fn apply_authored_catalogue_preview_initial_animation_repetition_poli
         return;
     };
     for (animation_controller_entity, prefab_model, _) in &newly_resolved_animation_controllers {
-        let Some(variant) = species_index.find_variant_by_model(prefab_model.model) else {
+        let Some(variant) = species_index.find_variant_by_model_path(&prefab_model.model_path)
+        else {
             continue;
         };
         let Some(animation_clip_asset_key) = variant.initial_animation_clip_asset_key.as_ref()
