@@ -72,7 +72,8 @@ pub(super) fn preserve_authored_font_aspect_in_extracted_text_draws(
             _ => 0.0,
         };
         let width = if single_line {
-            glyphs.size.x
+            // Logical glyph run, physical content box.
+            glyphs.size.x / node.inverse_scale_factor()
         } else {
             node.content_box().size().x
         };

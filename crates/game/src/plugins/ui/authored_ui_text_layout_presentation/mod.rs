@@ -64,24 +64,30 @@ pub(super) fn align_authored_single_line_text_from_measured_glyph_run(
             &ComputedNode,
             &TextLayout,
             &TextLayoutInfo,
+            Option<&Text>,
             &mut UiTransform,
         ),
         With<UiSingleLineTextAlignment>,
     >,
 ) {
-    for (node, text_layout, layout, mut transform) in &mut texts {
-        let remaining = (node.content_box().size() - layout.size).max(Vec2::ZERO);
+    for (node, text_layout, layout, text, mut transform) in &mut texts {
+        // `TextLayoutInfo::size` is logical; `ComputedNode` is physical.
+        let inverse_scale = node.inverse_scale_factor();
+        let remaining = (node.content_box().size() * inverse_scale - layout.size).max(Vec2::ZERO);
+        // The offset moves the whole node. A wordless styled layout (the
+        // `panelwell` frame behind the profile name) still measures a few
+        // pixels wide and would otherwise drag its frame half a width aside.
         let horizontal = match text_layout.justify {
+            _ if text.is_some_and(|text| text.0.is_empty()) => 0.0,
             Justify::Center => remaining.x * 0.5,
             Justify::End | Justify::Right => remaining.x,
             Justify::Start | Justify::Left | Justify::Justified => 0.0,
         };
-        let inverse_scale = node.inverse_scale_factor();
         // BF text begins at the authored region's top edge. Its `align`
         // attribute controls only the inline axis; vertically centering the
         // measured run moves short labels behind lower visual borders (most
         // visibly the photo-album page numbers).
-        let next = Val2::px(horizontal * inverse_scale, 0.0);
+        let next = Val2::px(horizontal, 0.0);
         if transform.translation != next {
             transform.translation = next;
         }
