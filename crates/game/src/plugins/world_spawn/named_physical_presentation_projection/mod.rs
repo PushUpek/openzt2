@@ -3,12 +3,13 @@ use super::{
     prefab_authored_attachment_identifier::PrefabAuthoredAttachmentIdentifier,
     prefab_presentation_types::PrefabPresentation, world_membership_types::DefinitionId,
 };
-use crate::assets::scene_prefab::ScenePrefabAsset;
-use crate::assets::world_definitions::{
+use crate::plugins::animation_graph::animation_presentation_relationship_types::AnimationPresentationOwner;
+use bevy::prelude::*;
+use openzt2_game_assets::scene_prefab::ScenePrefabAsset;
+use openzt2_game_assets::world_definitions::{
     world_definition_asset_set_state_and_borrowing_queries::WorldDefinitions,
     world_definition_document_asset_and_demand_loaded_dependency_paths::WorldDefinitionAsset,
 };
-use bevy::prelude::*;
 use openzt2_game_data::{
     world_definitions::world_objects::WorldObjectNamedPhysicalPresentationDefinition, AssetId,
 };
@@ -18,6 +19,12 @@ mod node_attachment_tests;
 
 #[derive(Component)]
 pub(super) struct NamedPhysicalPresentationsHydrated;
+
+/// A named physical object of its owner entity, such as a food stand's vendor.
+/// Node-attached binders hang below a model node, so the owner is kept here
+/// rather than read from the parent.
+#[derive(Component)]
+pub(super) struct NamedPhysicalPresentation(Entity);
 
 pub(super) fn hydrate_required_named_physical_presentations(
     mut commands: Commands,
@@ -85,6 +92,7 @@ pub(super) fn spawn_required_named_physical_presentations<'a>(
             Visibility::Inherited,
             ChildOf(parent),
             PrefabAuthoredAttachmentIdentifier(presentation.name),
+            NamedPhysicalPresentation(owner),
         ));
         if let Some(prefab) = prefab {
             child.insert(PrefabPresentation::new(prefab));
@@ -141,5 +149,30 @@ pub(super) fn attach_named_presentations_to_model_nodes(
             .entity(holder)
             .insert(ChildOf(node_entity))
             .remove::<PendingNamedPresentationNodeAttachment>();
+    }
+}
+
+/// A named physical object performs its owner's behaviors, as a food stand's
+/// vendor hands over money and food, so its animations belong to the owner.
+/// Runs after animation attachment has given the controller its direct parent.
+pub(super) fn project_named_presentation_animation_owners(
+    mut controllers: Query<
+        (Entity, &mut AnimationPresentationOwner),
+        Changed<AnimationPresentationOwner>,
+    >,
+    parents: Query<&ChildOf>,
+    presentations: Query<&NamedPhysicalPresentation>,
+) {
+    for (controller, mut owner) in &mut controllers {
+        let Some(presentation_owner) = parents
+            .iter_ancestors::<ChildOf>(controller)
+            .find_map(|ancestor| presentations.get(ancestor).ok())
+            .map(|presentation| presentation.0)
+        else {
+            continue;
+        };
+        if owner.gameplay_entity != presentation_owner {
+            owner.gameplay_entity = presentation_owner;
+        }
     }
 }
