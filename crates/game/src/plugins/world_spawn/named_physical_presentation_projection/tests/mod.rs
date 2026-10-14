@@ -11,7 +11,7 @@ use openzt2_game_data::{
 };
 
 use super::{hydrate_required_named_physical_presentations, NamedPhysicalPresentationsHydrated};
-use crate::assets::world_definitions::{
+use openzt2_game_assets::world_definitions::{
     world_definition_asset_set_state_and_borrowing_queries::WorldDefinitions,
     world_definition_document_asset_and_demand_loaded_dependency_paths::WorldDefinitionAsset,
 };
@@ -34,6 +34,7 @@ fn presentation(
 fn marker_object(id: AssetId) -> WorldObjectDefinition {
     WorldObjectDefinition {
         supports_show_tricks: false,
+        behavior_type_identifiers: Vec::new(),
         view_data: Vec::new(),
         detach_actions: Vec::new(),
         selected_ui_broadcasts: Vec::new(),
