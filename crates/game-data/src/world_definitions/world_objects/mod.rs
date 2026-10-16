@@ -208,6 +208,11 @@ pub struct WorldObjectNamedPhysicalPresentationDefinition {
     pub prefab: AssetId,
     pub scale: f32,
     pub required: bool,
+    /// False for a binder the engine reveals only on a state change, such as
+    /// an event marker's `finishedEventObj`. It still spawns, hidden, so the
+    /// state change only toggles its visibility.
+    #[serde(default = "named_physical_presentation_is_initially_visible")]
+    pub initially_visible: bool,
     /// Node of the object's main model this binder hangs on through
     /// `physObjParenting` (for example `Link_Fire01`). None spawns it at the
     /// object's origin.
@@ -216,6 +221,10 @@ pub struct WorldObjectNamedPhysicalPresentationDefinition {
     /// `rottype="use"`: the binder turns with its node, not just follows it.
     #[serde(default)]
     pub inherit_attach_rotation: bool,
+}
+
+const fn named_physical_presentation_is_initially_visible() -> bool {
+    true
 }
 
 #[allow(

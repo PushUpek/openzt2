@@ -73,6 +73,12 @@ pub(super) fn lower_named_physical_presentations(
             prefab: scene.map_or_else(AssetId::default, |scene| AssetId::from_virtual_path(scene)),
             scale,
             required,
+            // The original engine names this binder: event markers show
+            // `unfinishedEventObj` until their event completes.
+            initially_visible: !source_document_names_are_semantically_equal(
+                name,
+                "finishedEventObj",
+            ),
             attach_node: None,
             inherit_attach_rotation: false,
         });
@@ -161,6 +167,7 @@ pub(super) fn lower_parented_named_physical_presentations(
             prefab: AssetId::from_virtual_path(scene),
             scale,
             required: true,
+            initially_visible: true,
             attach_node: Some(node.to_owned()),
             inherit_attach_rotation: parenting
                 .attribute_named_any(&["rottype"])
@@ -274,6 +281,56 @@ mod tests {
                 ),
             ],
             "optional alternatives and actors are not parented presentations"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn event_marker_shows_only_its_unfinished_binder_initially(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let marker = parse_blue_fang_source_document(
+            AssetPath::new("event_marker.xml"),
+            br#"<BFTypedBinder binderType="gesture_event_marker">
+            <types><entity><gesture_event_marker/></entity></types>
+            <binder>
+                <BFNamedBinder binderName="unfinishedEventObj" required="1"><instance><BFPhysObj><BFSceneGraphComponent modelfile="unfinished.nif"/></BFPhysObj></instance></BFNamedBinder>
+                <BFNamedBinder binderName="finishedEventObj" required="1"><instance><BFPhysObj><BFSceneGraphComponent modelfile="finished.nif"/></BFPhysObj></instance></BFNamedBinder>
+            </binder>
+        </BFTypedBinder>"#,
+        )
+        .map_err(|error| std::io::Error::other(format!("{error:?}")))?;
+        let mut scenes = BlueFangActorManifestModelAndSceneResolutionIndex::default();
+        scenes.register_archive_resolved_native_model_scene_asset_path(
+            "unfinished.nif",
+            "unfinished.nif#scene",
+        );
+        scenes.register_archive_resolved_native_model_scene_asset_path(
+            "finished.nif",
+            "finished.nif#scene",
+        );
+        let document =
+            lower_resolved_world_definition_source_document_closure_to_canonical_document(
+                &[marker],
+                &scenes,
+                "event_marker.xml",
+                [0, 0],
+            )?
+            .ok_or_else(|| std::io::Error::other("marker source produced no document"))?;
+        let object = document
+            .objects
+            .first()
+            .ok_or_else(|| std::io::Error::other("marker object is absent"))?;
+        let visibility = object
+            .named_physical_presentations
+            .iter()
+            .map(|presentation| (presentation.name, presentation.initially_visible))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            visibility,
+            [
+                (AssetId::from_key("unfinishedeventobj"), true),
+                (AssetId::from_key("finishedeventobj"), false),
+            ]
         );
         Ok(())
     }
