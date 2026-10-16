@@ -439,8 +439,11 @@ pub(super) fn present_slider_values(
             .affine()
             .transform_point2(authored_interval_point);
         let current_thumb_centre = thumb_transform.affine().transform_point2(Vec2::ZERO);
+        // `UiTransform` translation is in logical pixels but the transforms
+        // are physical; without `inverse_scale` HiDPI overshoots every frame.
         let correction = track_transform.affine().matrix2.inverse()
-            * (desired_thumb_centre - current_thumb_centre);
+            * (desired_thumb_centre - current_thumb_centre)
+            * inverse_scale;
         let translation = match axis {
             UiSliderAxis::Horizontal => Val2::new(
                 px(translation_pixels(transform.translation.x) + correction.x),
