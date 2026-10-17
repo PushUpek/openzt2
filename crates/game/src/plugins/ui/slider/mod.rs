@@ -247,7 +247,6 @@ pub(super) fn adjust_sliders_from_pointer(
     parents: Query<&ChildOf>,
     windows: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let active_scope = context.active_scope();
     let modal = context.top_modal();
     // Pointer positions are logical; UI node transforms are physical.
     let scale = windows.single().map_or(1.0, Window::scale_factor);
@@ -261,8 +260,12 @@ pub(super) fn adjust_sliders_from_pointer(
     for (entity, enabled, presentation, policy, minimum, maximum, mut value, active, scroll) in
         &mut sliders
     {
+        // Pointer capture already picked this slider; keyboard focus scope
+        // (the topmost focusable document) must not gate it, or a HUD slider
+        // such as the catalogue scrollbar never drags.
         let eligible = enabled.is_none_or(|enabled| enabled.0)
-            && active_scope.is_some_and(|scope| context.eligible_in_scope(entity, scope, modal));
+            && context.visible_and_enabled(entity)
+            && modal.is_none_or(|modal| context.is_in_modal(entity, modal));
         if !eligible || (!primary_pointer.pressed && !primary_pointer.just_released) {
             if active.is_some() {
                 commands.entity(entity).remove::<UiSliderPointerActive>();
