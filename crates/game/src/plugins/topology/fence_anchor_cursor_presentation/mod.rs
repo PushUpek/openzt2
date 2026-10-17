@@ -18,7 +18,12 @@ use openzt2_game_assets::asset_source::AssetArchives;
 use openzt2_game_assets::model_source::native_model_source_lowering::native_model_scene_labelled_asset_path;
 use openzt2_game_assets::terrain::terrain_asset_types_and_borrowing_queries::TerrainAsset;
 
-use super::topology_graph_types::TopologyGrid;
+use openzt2_game_assets::world_definitions::world_definition_asset_set_state_and_borrowing_queries::WorldDefinitions;
+use openzt2_game_assets::world_definitions::world_definition_document_asset_and_demand_loaded_dependency_paths::WorldDefinitionAsset;
+
+use super::{
+    topology_construction_planning::fence_definition_is_gate, topology_graph_types::TopologyGrid,
+};
 
 // ponytail: `ZTFenceMode` names `anchor="ui/fx/anchor.xml"` and
 // `grid="ui/fx/fencegrid.xml"`; their model and decal are fixed here like the
@@ -43,6 +48,8 @@ pub(super) fn present_fence_anchor_cursor(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     tool: Res<ConstructionTool>,
+    active_definitions: Res<WorldDefinitions>,
+    definitions: Res<Assets<WorldDefinitionAsset>>,
     grid: Res<TopologyGrid>,
     ui_capture: Res<crate::plugins::ui::picking::UiPointerCapture>,
     terrain_index: Res<TerrainIndex>,
@@ -58,8 +65,12 @@ pub(super) fn present_fence_anchor_cursor(
         Option<&Mesh3d>,
     )>,
 ) {
-    let (Ok(pointer), Ok(root), ConstructionTool::Fence(_)) =
-        (pointer.single(), roots.single(), *tool)
+    // A gate goes onto an existing fence, so it has no anchor post to show.
+    let gate = matches!(*tool, ConstructionTool::Fence(definition)
+        if active_definitions.get(&definitions)
+            .is_some_and(|definitions| fence_definition_is_gate(definitions, definition)));
+    let (Ok(pointer), Ok(root), ConstructionTool::Fence(_), false) =
+        (pointer.single(), roots.single(), *tool, gate)
     else {
         for (entity, ..) in &anchors {
             commands.entity(entity).despawn();

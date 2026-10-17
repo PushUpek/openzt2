@@ -60,7 +60,7 @@ pub(super) fn hydrate_topology_prefab_presentations(
         // A gate edge presents its authored segment model and, beside it, the
         // actor named by its ZTGate physObj binder which carries the leaves.
         let gate_scene = gate
-            .and_then(|_| definitions.find_fence(edge?.definition))
+            .and_then(|_| definitions.find_gate_fence(edge?.definition))
             .map(|fence| fence.gate_policy.prefab)
             .filter(|id| *id != AssetId::default());
         let gate_handle = match gate_scene {
@@ -137,8 +137,17 @@ pub(super) fn hydrate_topology_prefab_presentations(
                 });
             }
             if let Some(gate_handle) = gate_handle {
+                // The gate actor is authored around its centre, between the
+                // hinges; segment models start at their first post.
+                let half_m = cells.map_or(0.0, |cells| {
+                    let [first, second] = cells.endpoint_cells();
+                    grid.cell_translation(first)
+                        .xz()
+                        .distance(grid.cell_translation(second).xz())
+                        * 0.5
+                });
                 commands.spawn((
-                    Transform::IDENTITY,
+                    Transform::from_xyz(half_m, 0.0, 0.0),
                     Visibility::Inherited,
                     ChildOf(second_transform),
                     PrefabPresentation::new(gate_handle),
