@@ -2,6 +2,7 @@ use bevy::{
     picking::pointer::{PointerId, PointerLocation},
     prelude::*,
     ui::px,
+    window::PrimaryWindow,
 };
 use openzt2_game_data::AssetId;
 
@@ -244,12 +245,15 @@ pub(super) fn adjust_sliders_from_pointer(
     tracks: Query<(&ComputedNode, &UiGlobalTransform)>,
     thumbs: Query<(Entity, &UiNodeId, &ComputedNode, &UiGlobalTransform)>,
     parents: Query<&ChildOf>,
+    windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     let active_scope = context.active_scope();
     let modal = context.top_modal();
+    // Pointer positions are logical; UI node transforms are physical.
+    let scale = windows.single().map_or(1.0, Window::scale_factor);
     let point = pointers.iter().find_map(|(id, location)| {
         if *id == PointerId::Mouse {
-            location.location().map(|location| location.position)
+            location.location().map(|location| location.position * scale)
         } else {
             None
         }
