@@ -1,5 +1,6 @@
 //! Fence, path, gate, and portal facts stored directly in the live ECS.
 
+mod fence_anchor_cursor_presentation;
 mod fence_construction_preview_presentation;
 mod fence_segment_prefab_refresh;
 mod fence_segment_prefab_selection;
@@ -29,6 +30,7 @@ mod topology_index_hydration;
 mod topology_prefab_presentation;
 pub(crate) mod topology_presentation_types;
 
+use fence_anchor_cursor_presentation::present_fence_anchor_cursor;
 use fence_construction_preview_presentation::{
     project_fence_construction_preview_validity_onto_prefab_model_tints,
     reconcile_fence_construction_preview_presentation_segments,
@@ -135,6 +137,7 @@ impl Plugin for TopologyPlugin {
                 (
                     hydrate_save_loaded_topology_definition_facts,
                     reconcile_fence_construction_preview_presentation_segments,
+                    present_fence_anchor_cursor,
                     invalidate_ground_path_terrain_fitting_after_terrain_changes,
                     fit_ground_path_tiles_to_authored_terrain,
                     hydrate_elevated_path_surface_mesh_and_material_presentations,
