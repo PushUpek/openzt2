@@ -81,7 +81,9 @@ use topology_edit_types::{
 };
 use topology_graph_types::{TopologyGrid, TopologyIndex};
 use topology_index_hydration::index_loaded_topology_and_remove_duplicate_or_invalid_entities;
-use topology_prefab_presentation::hydrate_topology_prefab_presentations;
+use topology_prefab_presentation::{
+    attach_fence_posts_to_hydrated_segment_models, hydrate_topology_prefab_presentations,
+};
 
 use bevy::prelude::*;
 
@@ -140,6 +142,7 @@ impl Plugin for TopologyPlugin {
                     hydrate_authored_path_curb_prefab_presentations,
                     refresh_fence_segment_prefabs_after_topology_index_changes,
                     hydrate_topology_prefab_presentations,
+                    attach_fence_posts_to_hydrated_segment_models,
                     attach_authored_animation_sets_to_resolved_gate_models,
                     fit_fence_presentations_to_terrain_endpoint_heights,
                     project_fence_construction_preview_validity_onto_prefab_model_tints,
