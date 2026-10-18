@@ -1,8 +1,8 @@
 //! Texture, terrain-decal and world-light configuration.
 
 use super::{
-    uniform_buffer_upload::shader_buffer_from_uniform_value, EffectPassMaterial,
-    FIXED_FUNCTION_SHADER,
+    EffectPassMaterial, FIXED_FUNCTION_SHADER,
+    uniform_buffer_upload::shader_buffer_from_uniform_value,
 };
 use bevy::{
     prelude::*,
