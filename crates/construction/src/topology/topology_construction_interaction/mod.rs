@@ -24,7 +24,7 @@ use crate::topology::fence_anchor_press_diagnostic_types::InitialFenceAnchorPres
 use crate::topology::topology_construction_planning::calculate_fence_construction_plan;
 use crate::topology::topology_construction_planning::calculate_path_construction_plan;
 use crate::topology::topology_construction_planning::{
-    calculate_gate_replacement_plan, fence_definition_is_gate, GateHostEdges,
+    GateHostEdges, calculate_gate_replacement_plan, fence_definition_is_gate,
 };
 use crate::topology::topology_construction_preview_types::FencePreview;
 use crate::topology::topology_construction_preview_types::PathPreview;

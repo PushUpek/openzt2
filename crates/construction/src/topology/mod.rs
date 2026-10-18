@@ -40,10 +40,10 @@ use crate::topology::path_curb_presentation::invalidate_path_curb_presentations_
 use crate::topology::path_support_hydration::hydrate_authored_path_supports_at_sampled_terrain_height;
 use crate::topology::path_support_hydration::invalidate_path_supports_after_topology_or_terrain_changes;
 use crate::topology::path_support_hydration::remove_path_supports_after_their_owning_path_is_removed;
+use crate::topology::path_surface_presentation::ElevatedPathSurfacePresentationAssets;
 use crate::topology::path_surface_presentation::fit_ground_path_tiles_to_authored_terrain;
 use crate::topology::path_surface_presentation::hydrate_elevated_path_surface_mesh_and_material_presentations;
 use crate::topology::path_surface_presentation::invalidate_ground_path_terrain_fitting_after_terrain_changes;
-use crate::topology::path_surface_presentation::ElevatedPathSurfacePresentationAssets;
 use crate::topology::tank_boundary_projection::remove_tank_boundary_relationship_entities_with_missing_endpoints;
 use crate::topology::tank_boundary_projection::synchronize_tank_boundary_relationships_after_habitat_region_changes;
 use crate::topology::topology_construction_interaction::apply_fence_placement_requests_to_construction_previews;
