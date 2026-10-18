@@ -1,15 +1,15 @@
 //! Packing and uploading effect shader registers.
 
 use super::{
-    parameter_register_binding::shader_stage_dirty_bit, D3d9BooleanShaderRegisters,
-    D3d9FloatShaderRegisters, D3d9IntegerShaderRegisters, D3d9PackedShaderRegisters,
-    D3d9ProgrammableShaderStage, EffectPassMaterial, EffectPassUniformBufferAssets,
+    D3d9BooleanShaderRegisters, D3d9FloatShaderRegisters, D3d9IntegerShaderRegisters,
+    D3d9PackedShaderRegisters, D3d9ProgrammableShaderStage, EffectPassMaterial,
+    EffectPassUniformBufferAssets, parameter_register_binding::shader_stage_dirty_bit,
 };
 use bevy::{
     asset::RenderAssetUsages,
     prelude::*,
     render::{
-        render_resource::{encase::UniformBuffer, BufferUsages, ShaderType},
+        render_resource::{BufferUsages, ShaderType, encase::UniformBuffer},
         storage::ShaderBuffer,
     },
 };

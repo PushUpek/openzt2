@@ -6,7 +6,7 @@ use std::{
 };
 
 use bevy::{
-    asset::{io::Reader, AssetLoader, LoadContext},
+    asset::{AssetLoader, LoadContext, io::Reader},
     gltf::{GltfLoader, GltfLoaderSettings},
     image::ImageLoaderSettings,
     prelude::*,
