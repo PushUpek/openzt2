@@ -372,6 +372,10 @@ fn choose_behavior_target_placement_site(
     if prefab.canonical_scene_prefab_document().entities.is_empty() {
         return SiteChoice::Rejected;
     }
+    // Automatic footprints come from the loaded prefab's bounds.
+    if definition.automatic_footprint && definition.footprint.is_empty() {
+        return SiteChoice::Pending;
+    }
     if let Some(model) = first_missing_prefab_collider_model_asset_id(prefab, &world.models) {
         let failed = prefab.loaded_model_asset_handle(model).is_none_or(|model| {
             matches!(
