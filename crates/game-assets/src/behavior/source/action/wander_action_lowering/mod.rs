@@ -56,7 +56,10 @@ pub(super) fn lower_wander_action(
             "duplicate wander avoidance types",
         ));
     }
-    let radius = read_optional_float_attribute(node, "avoidEntityRadius")?;
+    // ponytail: a type list without a radius keeps two metres away, as the
+    // native default is unrecovered; `animal:Poop` and `animal:Pee` rely on it.
+    let radius = read_optional_float_attribute(node, "avoidEntityRadius")?
+        .or_else(|| type_list.map(|_| 2.0));
     let avoided_entities = match (radius, type_list) {
         (None, None) => None,
         (Some(radius_m), Some(types)) if radius_m.is_finite() && radius_m >= 0.0 => {
