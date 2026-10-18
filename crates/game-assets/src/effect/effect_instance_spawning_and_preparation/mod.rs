@@ -3,14 +3,16 @@
 use bevy::prelude::*;
 use bevy_hanabi::prelude::{EffectAsset as HanabiEffectAsset, ParticleEffect};
 use openzt2_game_data::{
-    particle::{
-        legacy_nif_particle_effect::LegacyNifParticleModifier,
-        ParticleEffectDocument as ParticleDocument,
-    },
     AssetId,
+    particle::{
+        ParticleEffectDocument as ParticleDocument,
+        legacy_nif_particle_effect::LegacyNifParticleModifier,
+    },
 };
 
 use super::{
+    LiveParticleEffectInstance, ParticleEffectDocumentAsset, SpawnCompleteParticleEffectDocument,
+    SpawnParticleEffectEmitter,
     effect_document_runtime_queries::{
         calculate_effect_emitter_tree_lifetime_seconds, collect_all_effect_emitter_ids,
         collect_root_effect_emitter_ids, create_collision_spawn_initialization,
@@ -21,8 +23,6 @@ use super::{
         PendingEffectMaterialBinding, PendingEffectMeshBinding,
     },
     prepared_effect_asset_cache::PreparedHanabiEffectAssets,
-    LiveParticleEffectInstance, ParticleEffectDocumentAsset, SpawnCompleteParticleEffectDocument,
-    SpawnParticleEffectEmitter,
 };
 
 pub(super) fn enqueue_requested_effect_instances_for_preparation(

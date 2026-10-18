@@ -3,7 +3,7 @@
 use std::io;
 
 use bevy::{
-    asset::{io::Reader, AssetApp, AssetLoader, LoadContext},
+    asset::{AssetApp, AssetLoader, LoadContext, io::Reader},
     gltf::{Gltf, GltfLoader, GltfLoaderSettings},
     prelude::*,
 };
