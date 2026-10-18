@@ -3,14 +3,13 @@
 use std::{
     collections::BTreeMap,
     sync::{
-        Arc,
         atomic::{AtomicUsize, Ordering},
+        Arc,
     },
 };
 
 use bevy::{gltf::Gltf, prelude::*};
 use openzt2_game_data::{
-    AssetId,
     world_definitions::{
         animal_health::*,
         animal_shows_and_training::*,
@@ -38,6 +37,7 @@ use openzt2_game_data::{
         transportation_and_tours::*,
         world_objects::*,
     },
+    AssetId,
 };
 
 use crate::{effect::ParticleEffectDocumentAsset, scene_prefab::ScenePrefabAsset};
