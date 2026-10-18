@@ -17,7 +17,7 @@ use openzt2_world_state::world_spawn::world_membership_types::WorldMember;
 use crate::topology::topology_construction_planning::calculate_fence_construction_plan;
 use crate::topology::topology_construction_planning::calculate_path_construction_plan;
 use crate::topology::topology_construction_planning::{
-    GateHostEdges, calculate_gate_replacement_plan, fence_definition_is_gate,
+    calculate_gate_replacement_plan, fence_definition_is_gate, GateHostEdges,
 };
 use crate::topology::topology_construction_preview_types::FencePreview;
 use crate::topology::topology_construction_preview_types::PathPreview;

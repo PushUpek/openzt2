@@ -1,8 +1,8 @@
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
-use openzt2_game_data::AssetId;
 use openzt2_game_data::world_definitions::paths_and_tile_surfaces::GuestPathDefinition;
 use openzt2_game_data::world_definitions::world_objects::WorldObjectKind;
+use openzt2_game_data::AssetId;
 
 use openzt2_game_assets::terrain::terrain_asset_types_and_borrowing_queries::TerrainAsset;
 use openzt2_game_assets::world_definitions::world_definition_asset_set_state_and_borrowing_queries::WorldDefinitionsView;
