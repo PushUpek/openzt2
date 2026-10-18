@@ -234,3 +234,23 @@ fn reversed_reaction_delivery_preserves_distinct_event_effects() {
     app.update();
     assert_eq!(app.world().get::<GuestEducation>(guest).unwrap().0, 50);
 }
+
+#[test]
+fn an_emitted_view_event_reaches_every_current_viewer_once() {
+    let (mut app, subject, first, second) = fixture();
+    app.add_systems(
+        Update,
+        super::view_event_execution::deliver_view_events_to_current_viewers
+            .before(apply_guest_reactions),
+    );
+    emit(&mut app, subject, 1);
+    app.update();
+    assert_eq!(app.world().get::<GuestEducation>(first).unwrap().0, 25);
+    assert_eq!(app.world().get::<GuestEducation>(second).unwrap().0, 25);
+    // A guest who stopped watching is not reached by the next event.
+    app.world_mut().entity_mut(second).remove::<Viewing>();
+    emit(&mut app, subject, 2);
+    app.update();
+    assert_eq!(app.world().get::<GuestEducation>(first).unwrap().0, 50);
+    assert_eq!(app.world().get::<GuestEducation>(second).unwrap().0, 25);
+}
