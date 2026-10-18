@@ -155,7 +155,13 @@ pub(super) fn apply_behavior_target_placements(
             continue;
         }
         let next = match &pending.stage {
-            BehaviorTargetPlacementStage::Siting => {
+            BehaviorTargetPlacementStage::Siting { prefab } => {
+                if prefab.is_none() {
+                    let prefab = catalogue
+                        .find_object(pending.definition)
+                        .and_then(|object| catalogue.scene(object.prefab));
+                    pending.stage = BehaviorTargetPlacementStage::Siting { prefab };
+                }
                 match choose_behavior_target_placement_site(
                     actor,
                     &pending,
