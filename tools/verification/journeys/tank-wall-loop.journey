@@ -19,4 +19,5 @@ until fences > @tank-step
 key ESCAPE
 until placement_previews == 0
 until tanks == 1 within 600
+wait 30
 capture tank-built

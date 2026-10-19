@@ -12,6 +12,7 @@ use openzt2_zoo_state::aquatic::tank_floor_edit_types;
 mod tank_floor_edit_validation;
 mod tank_geometry_projection;
 mod tank_normalized_fact_clamping;
+mod tank_presentation;
 mod tank_water_quality_decay_calculation;
 mod tank_water_quality_decay_execution;
 mod tank_wall_enclosure_promotion;
@@ -105,6 +106,15 @@ impl Plugin for AquaticPlugin {
                 )
                     .chain()
                     .in_set(FixedGameSet::Cleanup),
+            )
+            .add_systems(
+                Update,
+                (
+                    tank_presentation::remove_orphaned_tank_presentations,
+                    tank_presentation::present_changed_tank_water_and_glass,
+                )
+                    .chain()
+                    .run_if(in_state(GamePhase::InGame)),
             );
     }
 }
