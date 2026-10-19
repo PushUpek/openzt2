@@ -254,3 +254,36 @@ fn an_emitted_view_event_reaches_every_current_viewer_once() {
     assert_eq!(app.world().get::<GuestEducation>(first).unwrap().0, 50);
     assert_eq!(app.world().get::<GuestEducation>(second).unwrap().0, 25);
 }
+
+#[test]
+fn a_guest_watching_through_its_view_task_receives_the_event() {
+    let (mut app, subject, guest, _) = fixture();
+    app.add_systems(
+        Update,
+        super::view_event_execution::deliver_view_events_to_current_viewers
+            .before(apply_guest_reactions),
+    );
+    let area = app.world().get::<Viewing>(guest).unwrap().area;
+    app.world_mut()
+        .entity_mut(guest)
+        .remove::<(GuestDestination, GuestNavigationRequest)>()
+        .insert(
+            openzt2_zoo_state::behavior_task_execution_types::BehaviorTaskExecutionState {
+                execution_id: 1,
+                program: AssetId::default(),
+                target: area,
+                document: default(),
+                declaration: 0,
+                phase: openzt2_zoo_state::behavior_task_execution_types::BehaviorTaskExecutionPhase::Execution,
+                action: 0,
+                repetitions: 0,
+                next_action_tick: 0,
+                object: None,
+                interaction_slot: None,
+                stack: default(),
+            },
+        );
+    emit(&mut app, subject, 1);
+    app.update();
+    assert_eq!(app.world().get::<GuestEducation>(guest).unwrap().0, 25);
+}

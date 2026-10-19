@@ -77,6 +77,7 @@ pub(crate) fn apply_guest_reactions(
             &mut GuestMemories,
             Option<&Viewing>,
             Option<&super::guest_simulation_types::GuestViewReactionReceipt>,
+            Option<&BehaviorTaskExecutionState>,
         ),
         With<Guest>,
     >,
@@ -92,8 +93,16 @@ pub(crate) fn apply_guest_reactions(
     let mut reactions: Vec<_> = incoming.read().copied().collect();
     reactions.sort_by_key(|reaction| reaction.view_event.map_or(0, |origin| origin.event_id));
     for reaction in &reactions {
-        let Ok((archetype, phase, mut satisfaction, mut education, mut memories, viewing, receipt)) =
-            guests.get_mut(reaction.guest)
+        let Ok((
+            archetype,
+            phase,
+            mut satisfaction,
+            mut education,
+            mut memories,
+            viewing,
+            receipt,
+            task,
+        )) = guests.get_mut(reaction.guest)
         else {
             continue;
         };
@@ -106,17 +115,24 @@ pub(crate) fn apply_guest_reactions(
             let Some(origin) = reaction.view_event else {
                 continue;
             };
-            if viewing != Some(&origin.viewing)
-                || origin.viewing.subject != reaction.subject
-                || *phase != GuestPhase::Visiting
-                || interruptions.contains(reaction.guest)
-                || !observations
+            // A guest watches either from a viewing destination it reached,
+            // or through its authored view task (`ZTBehViewAnimals`) at the
+            // path that task targets.
+            let watching_from_destination = !interruptions.contains(reaction.guest)
+                && observations
                     .get(reaction.guest)
                     .is_ok_and(|(destination, request)| {
                         destination.purpose == GuestVisitPurpose::View
                             && Some(destination.entity) == origin.viewing.area
                             && request.is_none_or(|request| request.0.is_none())
-                    })
+                    });
+            let watching_through_task = task.is_some_and(|task| {
+                origin.viewing.area.is_some() && task.target() == origin.viewing.area
+            });
+            if viewing != Some(&origin.viewing)
+                || origin.viewing.subject != reaction.subject
+                || *phase != GuestPhase::Visiting
+                || !(watching_from_destination || watching_through_task)
             {
                 continue;
             }
