@@ -166,8 +166,24 @@ pub(crate) fn apply_guest_reactions(
             {
                 continue;
             }
-            let Some(policy) = find_reaction(definition, GuestMemoryKind::AnimalView) else {
-                continue;
+            // Archetypes lowered from the original carry no reaction policy;
+            // they react with the event's own authored view score instead.
+            let deltas = match find_reaction(definition, GuestMemoryKind::AnimalView) {
+                Some(policy) => (policy.satisfaction_delta, policy.education_delta),
+                None => {
+                    let Some(row) = definitions
+                        .find_object(event.source_definition)
+                        .and_then(|definition| {
+                            definition
+                                .view_data
+                                .iter()
+                                .find(|row| row.name == event.view_key)
+                        })
+                    else {
+                        continue;
+                    };
+                    (row.view_score.round().clamp(-1_000.0, 1_000.0) as i16, 0)
+                }
             };
             if survey_policy.is_none() {
                 continue;
@@ -183,8 +199,10 @@ pub(crate) fn apply_guest_reactions(
                 super::guest_simulation_types::GuestViewReactionReceipt(*last),
             );
             // Read current policy rather than accepting deltas queued before a reload.
-            reaction.satisfaction_delta_permille = policy.satisfaction_delta;
-            reaction.education_delta_permille = policy.education_delta;
+            (
+                reaction.satisfaction_delta_permille,
+                reaction.education_delta_permille,
+            ) = deltas;
         }
         let education_delta = survey_policy
             .map(|policy| {

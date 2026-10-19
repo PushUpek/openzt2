@@ -287,3 +287,21 @@ fn a_guest_watching_through_its_view_task_receives_the_event() {
     app.update();
     assert_eq!(app.world().get::<GuestEducation>(guest).unwrap().0, 25);
 }
+
+#[test]
+fn an_archetype_without_a_reaction_policy_reacts_with_the_event_view_score() {
+    let (mut app, subject, guest, _) = fixture();
+    let mut document = policy_document();
+    document.guests[0].reactions.clear();
+    document.objects[0].view_data[0].view_score = 30.0;
+    install_policy(&mut app, &document);
+    app.add_systems(
+        Update,
+        super::view_event_execution::deliver_view_events_to_current_viewers
+            .before(apply_guest_reactions),
+    );
+    emit(&mut app, subject, 1);
+    app.update();
+    assert_eq!(app.world().get::<GuestSatisfaction>(guest).unwrap().0, 530);
+    assert_eq!(app.world().get::<GuestEducation>(guest).unwrap().0, 0);
+}
