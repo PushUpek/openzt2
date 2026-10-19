@@ -1,4 +1,5 @@
-# #124: a closed loop of one tank wall type becomes a tank.
+# #124: a closed loop of one tank wall type becomes a tank, whose walls
+# the tank tools raise and lower.
 start freeform-map
 click "construction"
 click "Tank Tools Tab"
@@ -21,3 +22,13 @@ until placement_previews == 0
 until tanks == 1 within 600
 wait 30
 capture tank-built
+snapshot tank-before-raise
+click "raise wall"
+drag 1180 340 1180 300
+until tank_wall_height_m > @tank-before-raise within 600
+wait 30
+capture wall-raised
+snapshot tank-raised
+click "lower wall"
+drag 1180 340 1180 380
+until tank_wall_height_m < @tank-raised within 600
