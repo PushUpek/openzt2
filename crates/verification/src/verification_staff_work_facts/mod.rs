@@ -130,6 +130,18 @@ pub(super) fn collect_staff_work_verification_facts(
             facts.push((name, f64::from(value)));
         }
     }
+    // Guests drop trash in a bin or on the ground, and either job clears it.
+    let fact = |facts: &[(String, f64)], name: &str| {
+        facts
+            .iter()
+            .find(|(fact, _)| fact == name)
+            .map_or(0.0, |(_, value)| *value)
+    };
+    let trash_waiting = fact(&facts, "loose_litter") + fact(&facts, "waste_bin_units");
+    let trash_jobs_completed = fact(&facts, "staff_jobs_completed_sweep_litter")
+        + fact(&facts, "staff_jobs_completed_empty_bin");
+    facts.push(("trash_waiting".to_owned(), trash_waiting));
+    facts.push(("trash_jobs_completed".to_owned(), trash_jobs_completed));
     facts.push((
         "staff_task_failures".to_owned(),
         f64::from(
