@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use openzt2_world_state::world_spawn::world_entity_crating::WorldEntityIsCrated;
+use openzt2_zoo_state::animal_health::types::Escaped;
 use openzt2_zoo_state::animal_lifecycle::types::Animal;
 use openzt2_zoo_state::animal_welfare::types::{AdjustHunger, Hunger, NeedTriggerState};
 use openzt2_zoo_state::behavior_task_execution_types::BehaviorTaskExecutionState;
@@ -10,8 +12,8 @@ use super::verification_journey_state_types::{
     VerificationFactCollectionState, VerificationJourneyReport, VerificationJourneySession,
 };
 
-/// Animals running a task on a food or drink container, the food left, and
-/// animal hunger. Hunger improvements, such as eating's authored `hunger`
+/// Animals running a task on a food or drink container, the food left,
+/// escaped and crated animals, and animal hunger. Hunger improvements, such as eating's authored `hunger`
 /// completion, are counted every frame because they fall between snapshots.
 pub(super) fn collect_animal_task_verification_facts(
     session: Res<VerificationJourneySession>,
@@ -23,6 +25,8 @@ pub(super) fn collect_animal_task_verification_facts(
     mut hunger_improvements: Local<u32>,
     food: Query<&FoodContainer>,
     drink: Query<(), With<DrinkContainer>>,
+    escaped: Query<(), (With<Animal>, With<Escaped>)>,
+    crated: Query<(), (With<Animal>, With<WorldEntityIsCrated>)>,
 ) {
     *hunger_improvements += hunger_changes
         .read()
@@ -53,6 +57,8 @@ pub(super) fn collect_animal_task_verification_facts(
             count(targeting(&|target| drink.contains(target))),
         ),
         ("food_left", food_left_q16 as f64 / 65_536.0),
+        ("escaped_animals", count(escaped.iter().count())),
+        ("crated_animals", count(crated.iter().count())),
         (
             "animal_hunger_improvements",
             f64::from(*hunger_improvements),

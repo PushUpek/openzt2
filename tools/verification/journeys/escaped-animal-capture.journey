@@ -1,0 +1,54 @@
+# diagnostic: run alone with --budget 1800
+# An aardvark whose habitat loses a fence segment escapes; the escaped binder
+# asks a keeper for t_CrateAnimal, and the keeper darts it (CrateAnimal_Land),
+# so its Tranquilized task crates it and clears b_Escaped (#111).
+start freeform-map
+snapshot before-habitat
+click "construction"
+click "Fence Tab"
+select-catalogue "chainlink"
+snapshot fence-start
+click 1000 220
+click 1350 220
+until fences > @fence-start
+snapshot fence-start
+click 1350 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 220
+until fences > @fence-start
+key ESCAPE
+until placement_previews == 0
+until habitats == @before-habitat+1
+click "animals"
+until rows "Animal Typelist" >= 1
+click "Buy Animal Tab"
+until rows "Animal Typelist" >= 1
+select-catalogue "aardvark" in "Animal Typelist"
+move 1170 340
+until placement_valid_previews == 1
+click 1170 340
+until contained_animals == 1
+until placement_previews == 0
+snapshot before-delete
+click "delete"
+move 1175 220
+click 1175 220
+until fences < @before-delete within 600
+key ESCAPE
+until escaped_animals == 1 within 3600
+capture aardvark-escaped
+snapshot before-hire
+click "staff"
+select-catalogue "keeper"
+move 1000 400
+until placement_valid_previews == 1
+click 1000 400
+until staff > @before-hire
+until placement_previews == 0
+until crated_animals == 1 within 18000
+capture aardvark-crated
+expect escaped_animals == 0
