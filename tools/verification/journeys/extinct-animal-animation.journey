@@ -1,0 +1,37 @@
+# diagnostic: run alone with --budget 900
+# A dodo, whose initial ground behavior names the `Stand` set rather than a
+# clip, still gets an animation controller and plays its idle.
+start freeform-map
+snapshot before-habitat
+click "construction"
+click "Fence Tab"
+select-catalogue "chainlink"
+snapshot fence-start
+click 1000 220
+click 1350 220
+until fences > @fence-start
+snapshot fence-start
+click 1350 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 220
+until fences > @fence-start
+key ESCAPE
+until placement_previews == 0
+until habitats == @before-habitat+1
+click "animals"
+until rows "Animal Typelist" >= 1
+click "Buy Animal Tab"
+until rows "Animal Typelist" >= 1
+wheel-to-catalogue "dodo"
+select-catalogue "dodo" in "Animal Typelist"
+move 1170 340
+until placement_valid_previews == 1
+click 1170 340
+until contained_animals == 1
+until placement_previews == 0
+until animated_animals == 1 within 3600
+capture dodo-animated
