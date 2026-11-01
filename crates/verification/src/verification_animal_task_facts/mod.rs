@@ -5,14 +5,16 @@ use openzt2_zoo_state::animal_welfare::types::{AdjustHunger, Hunger, NeedTrigger
 use openzt2_zoo_state::behavior_task_execution_types::BehaviorTaskExecutionState;
 use openzt2_zoo_state::feeding::container_quantity::DrinkContainer;
 use openzt2_zoo_state::feeding::container_quantity::FoodContainer;
+use openzt2_zoo_state::locomotion::locomotion_types::{AnimalTerrainWaterContact, LocomotionMode};
 
 use super::verification_journey_state_types::{
     VerificationFactCollectionState, VerificationJourneyReport, VerificationJourneySession,
 };
 
-/// Animals running a task on a food or drink container, the food left, and
-/// animal hunger. Hunger improvements, such as eating's authored `hunger`
-/// completion, are counted every frame because they fall between snapshots.
+/// Animals running a task on a food or drink container, the food left, animal
+/// hunger, and animals in or swimming through water. Hunger improvements, such
+/// as eating's authored `hunger` completion, are counted every frame because
+/// they fall between snapshots.
 pub(super) fn collect_animal_task_verification_facts(
     session: Res<VerificationJourneySession>,
     mut report: ResMut<VerificationJourneyReport>,
@@ -21,6 +23,7 @@ pub(super) fn collect_animal_task_verification_facts(
     triggers: Query<&NeedTriggerState, With<Animal>>,
     mut hunger_changes: MessageReader<AdjustHunger>,
     mut hunger_improvements: Local<u32>,
+    water: Query<(Option<&LocomotionMode>, Option<&AnimalTerrainWaterContact>), With<Animal>>,
     food: Query<&FoodContainer>,
     drink: Query<(), With<DrinkContainer>>,
 ) {
@@ -69,6 +72,24 @@ pub(super) fn collect_animal_task_verification_facts(
                 .map(|hunger| f64::from(hunger.0) / 65_536.0)
                 .sum::<f64>()
                 / hunger.iter().len().max(1) as f64,
+        ),
+        (
+            "swimming_animals",
+            count(
+                water
+                    .iter()
+                    .filter(|(mode, _)| mode.is_some_and(|mode| *mode == LocomotionMode::Swim))
+                    .count(),
+            ),
+        ),
+        (
+            "animals_in_water",
+            count(
+                water
+                    .iter()
+                    .filter(|(_, contact)| contact.is_some_and(|contact| contact.depth_m.is_some()))
+                    .count(),
+            ),
         ),
     ];
     for (name, value) in facts {

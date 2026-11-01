@@ -1,0 +1,57 @@
+# run alone with --budget 1800
+# A polar bear in a habitat that takes in the shore of a benthic map walks
+# into the water and swims (#104).
+start main-menu
+expect-visible "Freeform Button"
+click "Freeform Button"
+phase map-selection
+until rows "Map List" > 0
+click "benthic"
+until rows "Map List" == 3
+until settled
+click 107 461                   # Benthic Zoo (S)
+click "Play Map"
+phase in-game
+expect-hidden "Loading Screen"
+until steady camera_height_m 30
+move 800 400
+wheel -1 10
+until steady camera_height_m 30
+snapshot before-habitat
+click "construction"
+click "Fence Tab"
+select-catalogue "chainlink"
+snapshot fence-start
+click 650 250                   # land, west of the shore
+click 1100 250                  # water
+until fences > @fence-start
+snapshot fence-start
+click 1100 550
+until fences > @fence-start
+snapshot fence-start
+click 650 550
+until fences > @fence-start
+snapshot fence-start
+click 650 250
+until fences > @fence-start
+key ESCAPE
+until placement_previews == 0
+capture habitat-across-shore
+until habitats == @before-habitat+1
+click "animals"
+until rows "Animal Typelist" >= 1
+click "Buy Animal Tab"
+until rows "Animal Typelist" >= 1
+wheel-to-catalogue "bearpolar"
+select-catalogue "bearpolar" in "Animal Typelist"
+move 760 400
+until placement_valid_previews == 1
+click 760 400
+until contained_animals == 1
+until placement_previews == 0
+expect simulation_paused == 0
+capture bear-placed
+until animals_in_water == 1 within 18000
+capture bear-in-water
+until swimming_animals == 1 within 18000
+capture bear-swimming
