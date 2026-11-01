@@ -278,6 +278,10 @@ pub(crate) fn collect_requested_verification_facts(
         "cursor_over_terrain",
         flag(world.cursors.iter().any(|cursor| cursor.over_terrain)),
     );
+    // The terrain height under the pointer, as terrain tools change it.
+    if let Some(cursor) = world.cursors.iter().find(|cursor| cursor.over_terrain) {
+        fact("cursor_terrain_height_m", f64::from(cursor.world.y));
+    }
     fact("placement_previews", count(world.previews.iter().count()));
     fact(
         "placement_visible_previews",

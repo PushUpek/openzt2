@@ -1,0 +1,53 @@
+# diagnostic: run alone with --budget 900
+# Each terrain tool changes the height under the pointer as shell.xml
+# configures it (#92): hill raises and valley lowers; cliff (speed 0, so at
+# once) sets the press height plus 3.5 m and ditch, which keeps cliff's speed,
+# minus 3.5 m; flatten with no offset keeps the press height; smooth leaves a
+# flat spot flat. Undo restores the original terrain.
+start freeform-map
+click "terraform"
+click "Terrain Deformation Tab"
+click "hill"
+move 1150 340
+until cursor_over_terrain == 1
+snapshot before-tools
+drag 1150 340 1152 340
+until cursor_terrain_height_m > @before-tools within 600
+snapshot after-hill
+click "valley"
+move 1150 340
+drag 1150 340 1152 340
+until cursor_terrain_height_m < @after-hill within 600
+click "cliff"
+move 1150 340
+snapshot cliff-press
+click 1150 340
+until cursor_terrain_height_m > @cliff-press+3.4 within 600
+expect cursor_terrain_height_m < @cliff-press+3.6
+click "ditch"
+move 1150 340
+snapshot ditch-press
+click 1150 340
+until cursor_terrain_height_m < @ditch-press+-3.4 within 600
+expect cursor_terrain_height_m > @ditch-press+-3.6
+capture after-ditch
+click "flatten"
+move 1150 340
+snapshot flatten-press
+click 1150 340
+wait 30
+expect cursor_terrain_height_m > @flatten-press+-0.1
+expect cursor_terrain_height_m < @flatten-press+0.1
+click "smooth"
+move 1150 340
+snapshot smooth-press
+click 1150 340
+wait 30
+expect cursor_terrain_height_m > @smooth-press+-0.1
+expect cursor_terrain_height_m < @smooth-press+0.1
+key ESCAPE
+key CTRL+Z 6
+move 1150 340
+until cursor_terrain_height_m > @before-tools+-0.05 within 600
+expect cursor_terrain_height_m < @before-tools+0.05
+restore freeform-map
