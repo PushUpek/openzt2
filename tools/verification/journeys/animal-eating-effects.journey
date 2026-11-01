@@ -1,0 +1,60 @@
+# diagnostic: run alone with --budget 1800
+# A hungry aardvark eats from a hollow log of insects. The aardvark is
+# b_Medium, so it runs HollowLog_Insects.tsk's Browse:1, whose completion
+# fills hunger (hunger="-100"), raises bathroom by 30 and hygiene by 10
+# deprivation and takes 20 food; unlike the Basic and Advanced variants it
+# authors no stimulation (#107). Wellness is on 0..1000, so 30 deprivation is
+# 300 wellness. Drinking is checked in populated-zoo.journey.
+start freeform-map
+snapshot before-habitat
+click "construction"
+click "Fence Tab"
+select-catalogue "chainlink"
+snapshot fence-start
+click 1000 220
+click 1350 220
+until fences > @fence-start
+snapshot fence-start
+click 1350 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 220
+until fences > @fence-start
+key ESCAPE
+until placement_previews == 0
+until habitats == @before-habitat+1
+click "animals"
+until rows "Animal Typelist" >= 1
+click "Buy Animal Tab"
+until rows "Animal Typelist" >= 1
+click "Female Button"
+select-catalogue "aardvark" in "Animal Typelist"
+move 1170 340
+until placement_valid_previews == 1
+click 1170 340
+until contained_animals == 1
+until placement_previews == 0
+until animals_hungry == 1 within 36000
+click "Animal Food Tab"
+wheel-to-catalogue "hollowlog_insects"
+select-catalogue "hollowlog_insects" in "Food Typelist"
+move 1300 290
+until placement_valid_previews == 1
+click 1300 290
+until food_placed_objects == 1
+key ESCAPE
+until placement_previews == 0
+snapshot before-meal
+until animal_hunger_improvements > @before-meal within 36000
+wait 5
+capture aardvark-after-meal
+expect animal_hunger_mean > 990
+expect animal_bathroom_mean < @before-meal+-290
+expect animal_bathroom_mean > @before-meal+-310
+expect animal_hygiene_mean < @before-meal+-90
+expect animal_hygiene_mean > @before-meal+-110
+expect animal_stimulation_mean <= @before-meal
+expect food_left < @before-meal+-19

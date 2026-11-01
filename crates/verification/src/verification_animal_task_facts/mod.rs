@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 
 use openzt2_zoo_state::animal_lifecycle::types::Animal;
-use openzt2_zoo_state::animal_welfare::types::{AdjustHunger, Hunger, NeedTriggerState};
+use openzt2_zoo_state::animal_welfare::types::{
+    AdjustHunger, BathroomNeed, Hunger, HygieneNeed, NeedTriggerState, StimulationNeed,
+};
 use openzt2_zoo_state::behavior_task_execution_types::BehaviorTaskExecutionState;
 use openzt2_zoo_state::feeding::container_quantity::DrinkContainer;
 use openzt2_zoo_state::feeding::container_quantity::FoodContainer;
@@ -18,6 +20,7 @@ pub(super) fn collect_animal_task_verification_facts(
     mut report: ResMut<VerificationJourneyReport>,
     animals: Query<&BehaviorTaskExecutionState, With<Animal>>,
     hunger: Query<&Hunger, With<Animal>>,
+    other_needs: Query<(&BathroomNeed, &HygieneNeed, &StimulationNeed), With<Animal>>,
     triggers: Query<&NeedTriggerState, With<Animal>>,
     mut hunger_changes: MessageReader<AdjustHunger>,
     mut hunger_improvements: Local<u32>,
@@ -71,6 +74,20 @@ pub(super) fn collect_animal_task_verification_facts(
                 / hunger.iter().len().max(1) as f64,
         ),
     ];
+    // Wellness means on 0..1000, as `animal_hunger_mean`, for eating's other
+    // authored completion effects.
+    let mean = |pick: fn((&BathroomNeed, &HygieneNeed, &StimulationNeed)) -> i32| {
+        other_needs
+            .iter()
+            .map(|needs| f64::from(pick(needs)) / 65_536.0)
+            .sum::<f64>()
+            / other_needs.iter().len().max(1) as f64
+    };
+    let facts = facts.into_iter().chain([
+        ("animal_bathroom_mean", mean(|needs| needs.0 .0)),
+        ("animal_hygiene_mean", mean(|needs| needs.1 .0)),
+        ("animal_stimulation_mean", mean(|needs| needs.2 .0)),
+    ]);
     for (name, value) in facts {
         report.current_facts.insert(name.to_owned(), value);
     }
