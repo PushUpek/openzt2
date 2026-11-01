@@ -4,8 +4,7 @@ use openzt2_game_data::world_definitions::staff_management::StaffJobKind;
 use openzt2_zoo_state::behavior_task_execution_types::BehaviorTaskFailed;
 use openzt2_zoo_state::locomotion::locomotion_types::Destination;
 use openzt2_zoo_state::maintenance::maintenance_types::{
-    AnimalHabitatWaste, FacilityContainedWaste, LooseLitterWaste,
-    MaintainableObjectConditionPermille, ZooCleanlinessPermille,
+    AnimalHabitatWaste, FacilityContainedWaste, LooseLitterWaste, ZooCleanlinessPermille,
 };
 use openzt2_zoo_state::staff::staff_employment_types::Staff;
 use openzt2_zoo_state::staff::staff_job_types::{JobClaim, StaffJob};
@@ -34,7 +33,6 @@ pub(super) fn collect_staff_work_verification_facts(
     habitat_waste: Query<&AnimalHabitatWaste>,
     litter: Query<&LooseLitterWaste>,
     bins: Query<&FacilityContainedWaste>,
-    conditions: Query<&MaintainableObjectConditionPermille>,
     cleanliness: Option<Res<ZooCleanlinessPermille>>,
 ) {
     for completion in completed.read() {
@@ -85,22 +83,6 @@ pub(super) fn collect_staff_work_verification_facts(
                     .filter(|bin| bin.contained_waste_units >= bin.contained_waste_capacity_units)
                     .count(),
             ),
-        ),
-        (
-            "worn_objects".to_owned(),
-            count(
-                conditions
-                    .iter()
-                    .filter(|condition| condition.0 < 1_000)
-                    .count(),
-            ),
-        ),
-        (
-            "lowest_object_condition_permille".to_owned(),
-            conditions
-                .iter()
-                .map(|condition| f64::from(condition.0))
-                .fold(1_000.0, f64::min),
         ),
         (
             "zoo_cleanliness_permille".to_owned(),
@@ -154,13 +136,12 @@ pub(super) fn collect_staff_work_verification_facts(
     report.current_facts.extend(facts);
 }
 
-const ALL_KINDS: [StaffJobKind; 13] = [
+const ALL_KINDS: [StaffJobKind; 12] = [
     StaffJobKind::Feed,
     StaffJobKind::RefillWater,
     StaffJobKind::CleanHabitat,
     StaffJobKind::EmptyBin,
     StaffJobKind::SweepLitter,
-    StaffJobKind::Repair,
     StaffJobKind::Treat,
     StaffJobKind::Educate,
     StaffJobKind::Entertain,
@@ -177,7 +158,6 @@ fn kind_name(kind: StaffJobKind) -> &'static str {
         StaffJobKind::CleanHabitat => "clean_habitat",
         StaffJobKind::EmptyBin => "empty_bin",
         StaffJobKind::SweepLitter => "sweep_litter",
-        StaffJobKind::Repair => "repair",
         StaffJobKind::Treat => "treat",
         StaffJobKind::Educate => "educate",
         StaffJobKind::Entertain => "entertain",
