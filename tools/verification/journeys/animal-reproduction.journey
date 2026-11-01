@@ -1,6 +1,8 @@
 # diagnostic: run alone with --budget 3600 and OPENZT2_SIMULATION_SPEED_MULTIPLIER=3
 # An adult female and male aardvark mate, the female becomes pregnant and,
 # after the authored 971.84 s gestation, gives birth to young (#97).
+# Until InviteReproduction gets a score (needPointsGood, see #97), the chain
+# stops before mating and the pregnancy step times out.
 start freeform-map
 snapshot before-habitat
 click "construction"
