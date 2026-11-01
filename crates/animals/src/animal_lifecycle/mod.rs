@@ -116,7 +116,7 @@ impl Plugin for AnimalLifecyclePlugin {
                         reject_animal_adoptions_after_rejected_transactions,
                     animal_spawn_request_execution::
                         spawn_animals_requested_by_gameplay_operations,
-                    animal_birth_execution::complete_due_animal_pregnancies,
+                    animal_birth_execution::spawn_children_for_authored_births,
                 )
                     .chain()
                     .in_set(FixedGameSet::Act)
