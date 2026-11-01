@@ -1,5 +1,5 @@
 # diagnostic: run alone with OPENZT2_SIMULATION_SPEED_MULTIPLIER=6 and --budget 5400
-# An extinct animal (an ankylosaurus) near a hot dog stand catches SlowingSyndrome from the
+# An extinct animal (a dodo) near a hot dog stand catches SlowingSyndrome from the
 # disease manager, and a keeper cures it (#109, #110).
 start freeform-map
 snapshot before-habitat
@@ -43,8 +43,8 @@ click "animals"
 until rows "Animal Typelist" >= 1
 click "Buy Animal Tab"
 until rows "Animal Typelist" >= 1
-wheel-to-catalogue "ankylosaurus"
-select-catalogue "ankylosaurus" in "Animal Typelist"
+wheel-to-catalogue "dodo"
+select-catalogue "dodo" in "Animal Typelist"
 move 1300 340
 until placement_valid_previews == 1
 click 1300 340
