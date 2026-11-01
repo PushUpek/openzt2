@@ -1,4 +1,4 @@
-# diagnostic: run alone with OPENZT2_SIMULATION_SPEED_MULTIPLIER=10 and --budget 3600
+# diagnostic: run alone with OPENZT2_SIMULATION_SPEED_MULTIPLIER=6 and --budget 5400
 # An extinct animal (an ankylosaurus) near a hot dog stand catches SlowingSyndrome from the
 # disease manager, and a keeper cures it (#109, #110).
 start freeform-map
@@ -61,6 +61,7 @@ until placement_previews == 0
 capture habitat-ready
 until diseased_animals == 1 within 180000
 capture animal-sick
+until slowed_animals == 1 within 3600     # SlowingSyndrome's b_DeCaffeineMode
 until animals_cured > 0 within 36000
 capture animal-cured
 expect diseased_animals == 0

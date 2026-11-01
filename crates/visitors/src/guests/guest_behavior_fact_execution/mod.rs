@@ -1,6 +1,7 @@
 //! Applies authored behavior changes to the guest owner's existing need facts.
 
 use bevy::prelude::*;
+use openzt2_zoo_state::locomotion::locomotion_types::CaffeineMode;
 use openzt2_game_data::behavior::{
     action::modification::{BehaviorFact, BehaviorFactModificationOperation},
     action_record::BehaviorAction,
@@ -54,6 +55,7 @@ pub(super) fn apply_authored_guest_behavior_fact_modifications(
     >,
     mut viewing_needs: Query<&mut GuestViewingNeed, With<Guest>>,
     containers: Query<(), With<FacilityContainedWaste>>,
+    caffeine_modes: Query<&CaffeineMode>,
     mut trash_changes: MessageWriter<AdjustFacilityContainedWaste>,
     mut commands: Commands,
 ) {
@@ -70,7 +72,11 @@ pub(super) fn apply_authored_guest_behavior_fact_modifications(
         // Validate the whole action before changing a need or consuming RNG.
         // An unresolved role or unsupported fact must enter the authored failure path.
         if !modifications.iter().all(|modification| {
-            modification.modification_operation == BehaviorFactModificationOperation::Add
+            let caffeine = matches!(
+                modification.modified_fact,
+                BehaviorFact::CaffeineMode | BehaviorFact::DeCaffeineMode
+            );
+            (caffeine || modification.modification_operation == BehaviorFactModificationOperation::Add)
                 && matches!(
                     modification.modified_fact,
                     BehaviorFact::Hunger
@@ -87,6 +93,8 @@ pub(super) fn apply_authored_guest_behavior_fact_modifications(
                         | BehaviorFact::AteFavoriteFood
                         | BehaviorFact::AteNonFavoriteFood
                         | BehaviorFact::TrashLevel
+                        | BehaviorFact::CaffeineMode
+                        | BehaviorFact::DeCaffeineMode
                 )
                 && resolve_behavior_entity_role_to_live_entity(
                     modification.affected_entity_role,
@@ -96,6 +104,9 @@ pub(super) fn apply_authored_guest_behavior_fact_modifications(
                 .is_some_and(|subject| {
                     if modification.modified_fact == BehaviorFact::TrashLevel {
                         return containers.contains(subject);
+                    }
+                    if caffeine {
+                        return needs.contains(subject);
                     }
                     needs.contains(subject)
                         && (modification.modified_fact != BehaviorFact::ViewAnimals
@@ -126,6 +137,26 @@ pub(super) fn apply_authored_guest_behavior_fact_modifications(
                 if let Ok(mut need) = viewing_needs.get_mut(subject) {
                     need.add_source_delta(authored_delta);
                 }
+                continue;
+            }
+            // Coffee.tsk's `b_CaffeineMode`.
+            if matches!(
+                modification.modified_fact,
+                BehaviorFact::CaffeineMode | BehaviorFact::DeCaffeineMode
+            ) {
+                let mode = if modification.modified_fact == BehaviorFact::CaffeineMode {
+                    CaffeineMode::Caffeinated
+                } else {
+                    CaffeineMode::Decaffeinated
+                };
+                CaffeineMode::write_authored(
+                    &mut commands.entity(subject),
+                    caffeine_modes.get(subject).ok(),
+                    mode,
+                    modification.modification_operation
+                        != BehaviorFactModificationOperation::Clear
+                        && authored_delta != 0,
+                );
                 continue;
             }
             // Trash.tsk completes with the guest's happiness and the can's

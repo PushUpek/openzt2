@@ -1,3 +1,4 @@
+use openzt2_zoo_state::locomotion::locomotion_types::CaffeineMode;
 use bevy::{ecs::system::SystemParam, prelude::*};
 mod consumable_compatibility;
 use openzt2_game_data::behavior::{
@@ -69,6 +70,7 @@ pub(super) fn apply_supported_current_behavior_fact_modifications(
     mut food_containers: Query<(Entity, &mut FoodContainer)>,
     mut drink_containers: Query<(Entity, &mut DrinkContainer)>,
     animals: Query<(), With<Animal>>,
+    caffeine_modes: Query<&CaffeineMode>,
     jobs: Query<&StaffJob>,
     compatibility: consumable_compatibility::AnimalConsumableCompatibility,
     mut commands: Commands,
@@ -273,6 +275,21 @@ pub(super) fn apply_supported_current_behavior_fact_modifications(
                         unreachable!("FoodLevel target was validated before application");
                     }
                 }
+                BehaviorFact::CaffeineMode | BehaviorFact::DeCaffeineMode => {
+                    let mode = if modification.modified_fact == BehaviorFact::CaffeineMode {
+                        CaffeineMode::Caffeinated
+                    } else {
+                        CaffeineMode::Decaffeinated
+                    };
+                    CaffeineMode::write_authored(
+                        &mut commands.entity(animal),
+                        caffeine_modes.get(animal).ok(),
+                        mode,
+                        modification.modification_operation
+                            != BehaviorFactModificationOperation::Clear
+                            && value_q16 != 0,
+                    );
+                }
                 _ => {
                     unreachable!("unsupported fact modifications were rejected before application")
                 }
@@ -301,6 +318,12 @@ fn behavior_fact_modification_has_runtime_owner(
             && modification.modification_operation == BehaviorFactModificationOperation::Add
             && (food_containers.contains(affected_entity)
                 ^ drink_containers.contains(affected_entity));
+    }
+    if matches!(
+        modification.modified_fact,
+        BehaviorFact::CaffeineMode | BehaviorFact::DeCaffeineMode
+    ) {
+        return true;
     }
     if !animals.contains(affected_entity) {
         return false;
