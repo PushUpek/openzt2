@@ -266,6 +266,8 @@ pub enum NeedKind {
     Health,
     Hygiene,
     Bathroom,
+    /// Simulated like the others but outside the welfare score.
+    Reproduction,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]

@@ -26,6 +26,7 @@ impl Plugin for AnimalWelfarePlugin {
             .add_message::<AdjustHealthNeed>()
             .add_message::<AdjustHygiene>()
             .add_message::<AdjustBathroom>()
+            .add_message::<AdjustReproduction>()
             .add_message::<SetAnimalNeed>()
             .add_message::<NeedChanged>()
             .add_message::<WelfareChanged>()
@@ -51,6 +52,7 @@ impl Plugin for AnimalWelfarePlugin {
                     systems::adjust_health_need,
                     systems::adjust_hygiene,
                     systems::adjust_bathroom,
+                    systems::adjust_reproduction.after(systems::set_animal_need),
                     systems::set_animal_need,
                     systems::accumulate_need_points,
                 )
@@ -71,7 +73,10 @@ impl Plugin for AnimalWelfarePlugin {
             )
             .add_systems(
                 FixedUpdate,
-                systems::initialize_animal_needs
+                (
+                    systems::initialize_animal_needs,
+                    systems::initialize_missing_reproduction_needs,
+                )
                     .in_set(FixedGameSet::Cleanup)
                     .run_if(in_state(GamePhase::InGame)),
             );
