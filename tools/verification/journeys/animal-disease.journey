@@ -1,0 +1,66 @@
+# diagnostic: run alone with OPENZT2_SIMULATION_SPEED_MULTIPLIER=10 and --budget 3600
+# An extinct animal (an ankylosaurus) near a hot dog stand catches SlowingSyndrome from the
+# disease manager, and a keeper cures it (#109, #110).
+start freeform-map
+snapshot before-habitat
+click "construction"
+click "Fence Tab"
+select-catalogue "chainlink"
+snapshot fence-start
+click 1000 220
+click 1350 220
+until fences > @fence-start
+snapshot fence-start
+click 1350 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 470
+until fences > @fence-start
+snapshot fence-start
+click 1000 220
+until fences > @fence-start
+key ESCAPE
+until placement_previews == 0
+select-catalogue "staffgate"
+move 985 320
+until placement_valid_previews == 1
+click 985 320
+key ESCAPE
+until placement_previews == 0
+until habitats == @before-habitat+1
+click "Building Tab"
+until rows "Building Typelist" >= 1
+move "Building Typelist"
+wheel-to-catalogue "foodstand_hotdog_df"
+select-catalogue "foodstand_hotdog_df"
+move 1410 340                   # just east of the fence
+until placement_valid_previews == 1
+click 1410 340
+until placed_objects > @before-habitat
+key ESCAPE
+until placement_previews == 0
+click "animals"
+until rows "Animal Typelist" >= 1
+click "Buy Animal Tab"
+until rows "Animal Typelist" >= 1
+wheel-to-catalogue "ankylosaurus"
+select-catalogue "ankylosaurus" in "Animal Typelist"
+move 1300 340
+until placement_valid_previews == 1
+click 1300 340
+until contained_animals == 1
+until placement_previews == 0
+snapshot before-hire
+click "staff"
+select-catalogue "keeper"
+move 900 340
+until placement_valid_previews == 1
+click 900 340
+until staff > @before-hire
+until placement_previews == 0
+capture habitat-ready
+until diseased_animals == 1 within 180000
+capture animal-sick
+until animals_cured > 0 within 36000
+capture animal-cured
+expect diseased_animals == 0

@@ -2,6 +2,7 @@
 //! through its own input, then record facts, logs and screenshots.
 
 mod verification_animal_drinking_facts;
+mod verification_animal_health_facts;
 mod verification_animal_preview_diagnostics;
 mod verification_animal_task_facts;
 mod verification_building_panel_facts;
@@ -185,6 +186,7 @@ impl Plugin for VerificationJourneyPlugin {
                 verification_catalogue_wheel_input::collect_catalogue_scroll_verification_facts,
                 verification_catalogue_selection_facts::collect_catalogue_selection_verification_facts,
                 verification_animal_task_facts::collect_animal_task_verification_facts,
+                verification_animal_health_facts::collect_animal_health_verification_facts,
                 verification_animal_drinking_facts::collect_animal_drinking_verification_facts,
                 verification_guest_activity_facts::collect_guest_activity_verification_facts,
                 verification_staff_work_facts::collect_staff_work_verification_facts,
